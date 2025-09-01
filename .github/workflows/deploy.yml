@@ -1,0 +1,32 @@
+name: Build and Push
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Set Docker tag
+      id: vars
+      run: |
+        echo "TAG=${{ github.sha }}" >> $GITHUB_ENV
+        echo "IMAGE_TAG=registry.vistara.dev/08ffc85c-12a8-4ea9-a640-139553f5af8d:${{ github.sha }}" >> $GITHUB_ENV
+        echo $GITHUB_ENV $TAG $IMAGE_TAG
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ env.IMAGE_TAG }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
