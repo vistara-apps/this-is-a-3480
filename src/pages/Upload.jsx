@@ -7,10 +7,15 @@ import { useClaims } from '../context/ClaimContext'
 
 export default function Upload() {
   const navigate = useNavigate()
-  const { addClaim, addPhotos, simulateProcessing, processingFiles } = useClaims()
+  const { addClaim, addPhotos, processPhotosWithAI, processingFiles } = useClaims()
   const [selectedFiles, setSelectedFiles] = useState([])
   const [currentClaim, setCurrentClaim] = useState(null)
   const [step, setStep] = useState('claim') // claim, upload, processing, complete
+  const [processingStatus, setProcessingStatus] = useState({
+    total: 0,
+    completed: 0,
+    currentFile: null
+  })
 
   const handleClaimSubmit = (claimData) => {
     const newClaim = addClaim(claimData)
@@ -21,12 +26,17 @@ export default function Upload() {
   const handleFilesSelected = async (files) => {
     setSelectedFiles(files)
     setStep('processing')
+    setProcessingStatus({
+      total: files.length,
+      completed: 0,
+      currentFile: files[0]?.name || null
+    })
     
-    // Simulate AI processing
-    await simulateProcessing(files)
+    // Process photos with AI
+    const aiResults = await processPhotosWithAI(files)
     
-    // Add photos to claim
-    addPhotos(currentClaim.id, files)
+    // Add photos to claim with AI analysis results
+    addPhotos(currentClaim.id, files, aiResults)
     
     setStep('complete')
   }
